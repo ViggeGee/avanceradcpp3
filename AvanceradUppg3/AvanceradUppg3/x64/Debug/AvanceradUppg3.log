@@ -1,0 +1,5 @@
+﻿  Main.cpp
+  TestBasic.cpp
+  Generating Code...
+C:\Users\an4211\source\repos\AvanceradUppg3\AvanceradUppg3\SharedPtr.hpp(63,1): warning C4715: 'SharedPtr<TestChar>::use_count': not all control paths return a value
+  AvanceradUppg3.vcxproj -> C:\Users\an4211\source\repos\AvanceradUppg3\x64\Debug\AvanceradUppg3.exe
