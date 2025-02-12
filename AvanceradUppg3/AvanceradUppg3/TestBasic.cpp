@@ -18,6 +18,8 @@ void Error(const char* msg) {
     __debugbreak();
 }
 
+
+
 struct TestChar {
     int _state = 1;
     char _c;
@@ -37,8 +39,13 @@ struct TestChar {
     TestChar& operator=(const TestChar&) = delete;
 };
 
+
+
+
+
 #define TestShared SharedPtr<TestChar>
 #define TestWeak WeakPtr<TestChar>
+
 
 
 void TestBasic() {
