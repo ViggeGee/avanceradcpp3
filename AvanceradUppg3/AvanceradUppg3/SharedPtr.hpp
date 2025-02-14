@@ -7,19 +7,19 @@ class SharedPtr
 {
 public:
 
-	SharedPtr() : ptr_(nullptr), count_(nullptr) {}
+	SharedPtr() noexcept : ptr_(nullptr), count_(nullptr) {}
 
 	explicit SharedPtr(T* ptr) : ptr_(ptr), count_(ptr ? new size_t(1) : nullptr) {}
 
-	SharedPtr(const SharedPtr& other) : ptr_(other.ptr_), count_(other.count_) 
+	//Copy constructor
+	SharedPtr(const SharedPtr& other) : ptr_(other.ptr_), count_(other.count_)
 	{
-		if (count_) 
+		if (count_)
 			++(*count_);
 	}
 
 	// Move constructor
-	SharedPtr(SharedPtr&& other) noexcept
-		: ptr_(other.ptr_), count_(other.count_) 
+	SharedPtr(SharedPtr&& other) noexcept : ptr_(other.ptr_), count_(other.count_)
 	{
 		other.ptr_ = nullptr;
 		other.count_ = nullptr;
@@ -27,21 +27,22 @@ public:
 
 	~SharedPtr()
 	{
-		ptr_ = nullptr;
-		count_ = 0;
-		delete ptr_;
-		delete count_;
+		reset();
 	}
 
 	void reset()
 	{
+		--count_;
+		if (*count_ == 0)
+		{
+			delete count_;
+			delete ptr_;
+		}
+		count_ = nullptr;
 		ptr_ = nullptr;
-		count_ = 0;
-		delete ptr_;
-		delete count_;
 	}
 
-	
+
 
 	T* get()
 	{
@@ -58,9 +59,8 @@ public:
 
 	bool operator==(const SharedPtr& other)
 	{
-		if (ptr_ == other.ptr_)
+		if (get() == other.get())
 		{
-			if (count_ == other.count_)
 				return true;
 		}
 		return false;
@@ -68,8 +68,9 @@ public:
 
 	bool operator<(const SharedPtr& other)
 	{
-		if (count_ < other.count_)
+		if (ptr_() < other.ptr_())
 			return true;
+
 		return false;
 	}
 
@@ -88,8 +89,7 @@ public:
 			// Release old ownership
 			if (count_ && --(*count_) == 0)
 			{
-				delete ptr_;
-				delete count_;
+				reset();
 			}
 
 			// Share new ownership
@@ -104,18 +104,19 @@ public:
 	}
 
 	// Move Assignment Operator
-	SharedPtr& operator=(SharedPtr&& other) noexcept 
+	SharedPtr& operator=(SharedPtr&& other) noexcept
 	{
 		if (this != &other) {
 			// Release old ownership
 			if (count_ && --(*count_) == 0) {
-				delete ptr_;
-				delete count_;
+				reset();
 			}
+
 			// Steal resources from 'other'
 			ptr_ = other.ptr_;
 			count_ = other.count_;
-			// Leave 'other' in a valid null state
+
+			// Leave other in a valid null state
 			other.ptr_ = nullptr;
 			other.count_ = nullptr;
 		}
@@ -123,7 +124,7 @@ public:
 	}
 
 	// Swap function
-	void swap(SharedPtr& other) noexcept 
+	void swap(SharedPtr& other) noexcept
 	{
 		using std::swap;
 		swap(ptr_, other.ptr_);
@@ -131,18 +132,19 @@ public:
 	}
 
 	// Conversion to bool: Returns true if ptr_ is not null
-	explicit operator bool() const noexcept 
+	explicit operator bool() const noexcept
 	{
 		return ptr_ != nullptr;
 	}
 
-	bool Invariant() const noexcept 
+
+	bool Invariant() const noexcept
 	{
-		if (ptr_ == nullptr) 
+		if (ptr_ == nullptr)
 		{
-			return count_ == nullptr; // count_ must be nullptr when ptr_ is nullptr
+			return count_ == nullptr;
 		}
-		return count_ && *count_ > 0; // count_ must be non-null and positive when ptr_ is not null
+		return count_ && *count_ > 0;
 	}
 
 	size_t use_count() const noexcept
@@ -153,7 +155,7 @@ public:
 			return 0;
 	}
 
-	
+
 
 
 
